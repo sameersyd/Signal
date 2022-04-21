@@ -16,6 +16,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private lateinit var accelerometer: Sensor
 
+    private lateinit var accPosX: String
+    private lateinit var accPosY: String
+    private lateinit var accPosZ: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -30,16 +34,28 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event != null) {
             if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
-                textView.text = event.values[0].toString()
+                accPosX = event.values[0].toString()
+                accPosY = event.values[1].toString()
+                accPosZ = event.values[2].toString()
+                updateTextView()
             }
         }
+    }
+
+    private fun updateTextView() {
+        textView.text = """
+            Accelerometer
+            X = $accPosX
+            Y = $accPosY
+            Z = $accPosZ
+        """.trimIndent()
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) { return }
 
     override fun onResume() {
         super.onResume()
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST)
     }
 
     override fun onPause() {
