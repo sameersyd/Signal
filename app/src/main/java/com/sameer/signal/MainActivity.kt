@@ -5,9 +5,11 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
@@ -15,10 +17,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
     private lateinit var accelerometer: Sensor
+    private lateinit var wifiManager: WifiManager
 
     private lateinit var accPosX: String
     private lateinit var accPosY: String
     private lateinit var accPosZ: String
+
+    private var wifiStrength = ""
+    private var linkSpeed = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,18 +34,29 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         // Initialise sensor object
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        wifiManager = getApplicationContext().getSystemService(Context.WIFI_SERVICE) as WifiManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        updateWifiStrength()
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event != null) {
             if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
-                accPosX = event.values[0].toString()
-                accPosY = event.values[1].toString()
-                accPosZ = event.values[2].toString()
+                accPosX = event.values[0].roundToInt().toString()
+                accPosY = event.values[1].roundToInt().toString()
+                accPosZ = event.values[2].roundToInt().toString()
                 updateTextView()
             }
         }
+    }
+
+    private fun updateWifiStrength() {
+        val numberOfLevels = 5
+        val wifiInfo = wifiManager.connectionInfo
+        val level = WifiManager.calculateSignalLevel(wifiInfo.rssi, numberOfLevels)
+        var speed = wifiInfo.linkSpeed
+        wifiStrength = "$level out of $numberOfLevels"
+        linkSpeed = "$speed"
     }
 
     private fun updateTextView() {
@@ -48,6 +65,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             X = $accPosX
             Y = $accPosY
             Z = $accPosZ
+            
+            Wifi Strength = $wifiStrength
+            Link Speed = $linkSpeed
         """.trimIndent()
     }
 
@@ -55,7 +75,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST)
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
     }
 
     override fun onPause() {
